@@ -1,6 +1,7 @@
 from typing import Optional
 from uuid import uuid4
 from fastapi import FastAPI, Body, HTTPException
+from httpx import post
 from pydantic import BaseModel
 
 
@@ -28,7 +29,7 @@ def findPost(username):
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to my World!!!"}
+    return {"message": "Hello guys, Welcome to my World!!!"}
 
 
 @app.get("/posts")
@@ -70,7 +71,7 @@ def createPost(post: createPost):
 
 
 @app.get("/posts/{username}")
-def getPost(username):
+def getPost(username: str):
     posts = [post for post in dummy_posts if post["username"] == username]
 
     if not posts:
