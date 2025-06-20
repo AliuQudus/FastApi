@@ -1,5 +1,6 @@
 from typing import Optional
-from fastapi import FastAPI, Body
+from uuid import uuid4
+from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 
 
@@ -13,6 +14,18 @@ class createPost(BaseModel):
     rating: Optional[int] = None
 
 
+dummy_posts = [{"username": "ScamHunter", "title": "Learning API", "content": "Hey guys, I am new to this and I am just started my journey as a BackEnd dev."},
+               {"username": "Diablo", "title": "Strongest Necromancer",
+                "content": "One of the best anime I have listened to on pocket fm", "rating": 8},
+               {"username": "Anonymous", "title": "Donghua", "content": "The best donghua you can watch and enjoy every bit of it is definitely Battle Through the Heavens.", "rating": 9}]
+
+
+def findPost(username):
+    for post in dummy_posts:
+        if post['username'] == "username":
+            return post
+
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to my World!!!"}
@@ -20,8 +33,8 @@ async def root():
 
 @app.get("/posts")
 def getPost():
-    return {"data":
-            {"Name": "Aliu Qudus", "Age": 27, "Gender": "Male", "Country": "Nigeria"}
+    return {"data": dummy_posts
+            # {"Name": "Aliu Qudus", "Age": 27, "Gender": "Male", "Country": "Nigeria"}
             }
 
 
@@ -40,10 +53,30 @@ def createPost(post: dict = Body(...)):
 '''
 
 
-@app.post("/creates")
+@app.post("/posts")
 def createPost(post: createPost):
-    print(post)
-    print(post.model_dump())
-    return {"data": post.model_dump(),
-            "Message": "Post was successfully created"}
-    # return {"Message": "Post was successfully created"}
+
+    for existing_post in dummy_posts:
+        if existing_post["username"] == post.username:
+            # if existing_post["title"] == post.title and existing_post["content"] == post.content:
+            raise HTTPException(
+                status_code=400, detail="Post with this username already exists")
+
+    # model_dump() replaces dict() in the latest version.
+    post_dict = post.model_dump()
+    # post_dict["id"] = str(uuid4())  # This is to generate an automatic id
+    dummy_posts.append(post_dict)
+    return {"data": post_dict}
+
+
+@app.get("/posts/{username}")
+def getPost(username):
+    posts = [post for post in dummy_posts if post["username"] == username]
+
+    if not posts:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No posts found for username '{username}'"
+        )
+
+    return {"data": posts}
