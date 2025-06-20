@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, Body
 from pydantic import BaseModel
 
@@ -9,6 +10,7 @@ class createPost(BaseModel):
     username: str
     title: str
     content: str
+    rating: Optional[int] = None
 
 
 @app.get("/")
@@ -16,7 +18,7 @@ async def root():
     return {"message": "Welcome to my World!!!"}
 
 
-@app.get("/post")
+@app.get("/posts")
 def getPost():
     return {"data":
             {"Name": "Aliu Qudus", "Age": 27, "Gender": "Male", "Country": "Nigeria"}
@@ -38,8 +40,10 @@ def createPost(post: dict = Body(...)):
 '''
 
 
-@app.post("/create")
+@app.post("/creates")
 def createPost(post: createPost):
     print(post)
-    return {"Message": "Post was successfully created"
-            }
+    print(post.model_dump())
+    return {"data": post.model_dump(),
+            "Message": "Post was successfully created"}
+    # return {"Message": "Post was successfully created"}
