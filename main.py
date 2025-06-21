@@ -1,7 +1,7 @@
+from operator import index
 from typing import Optional
 from uuid import uuid4
-from fastapi import FastAPI, Body, HTTPException
-from httpx import post
+from fastapi import FastAPI, Body, HTTPException, status
 from pydantic import BaseModel
 
 
@@ -23,7 +23,7 @@ dummy_posts = [{"username": "ScamHunter", "title": "Learning API", "content": "H
 
 def findPost(username):
     for post in dummy_posts:
-        if post['username'] == "username":
+        if post['username'] == username:
             return post
 
 
@@ -34,34 +34,17 @@ async def root():
 
 @app.get("/posts")
 def getPost():
-    return {"data": dummy_posts
-            # {"Name": "Aliu Qudus", "Age": 27, "Gender": "Male", "Country": "Nigeria"}
-            }
+    return {"data": dummy_posts}
 
 
-'''
-@app.post("/create")
-def createPost(post: dict = Body(...)):
-    print(post)
-    return {
-        # "content": {
-        #     "title": "Introduction",
-        #     "content": "Hello, world! This is my first social media post. I hope you will follow me for more of my contents.",
-        #     "user_id": "qudusaliu@gmail.com"
-        # },
-        "Message": "Post Successfully Created"
-    }
-'''
-
-
-@app.post("/posts")
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
 def createPost(post: createPost):
 
     for existing_post in dummy_posts:
         if existing_post["username"] == post.username:
             # if existing_post["title"] == post.title and existing_post["content"] == post.content:
             raise HTTPException(
-                status_code=400, detail="Post with this username already exists")
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Post with this username already exists")
 
     # model_dump() replaces dict() in the latest version.
     post_dict = post.model_dump()
@@ -76,8 +59,16 @@ def getPost(username: str):
 
     if not posts:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No posts found for username '{username}'"
         )
 
     return {"data": posts}
+
+
+@app.delete("/posts/{username}", status_code=status.HTTP_410_GONE)
+def deletePost(username: str):
+    for i, post in enumerate(dummy_posts):
+        if post["username"] == username:
+            dummy_posts.pop(i)
+            return {'message': f"Post by '{username}' has been successfully deleted"}
