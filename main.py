@@ -1,3 +1,4 @@
+from operator import index
 from typing import Optional
 from uuid import uuid4
 from fastapi import FastAPI, Body, HTTPException, status, Path
@@ -11,6 +12,11 @@ class createPost(BaseModel):
     username: str
     title: str
     content: str
+    rating: Optional[int] = None
+
+class UpdatePost(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
     rating: Optional[int] = None
 
 
@@ -74,16 +80,34 @@ def deletePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
             dummy_posts.pop(i)
             return {'message': f"Post by '{username}' has been successfully deleted"}
         
-        
-            
-@app.put("/posts/{username}")
-def updatePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
-    posts = [post for post in dummy_posts if post["username"] == username]
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"No post found for username '{username}'"
+    )   
+    
 
-    if not posts:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No posts found for username '{username}'"
-        )
-    
-    
+@app.put("/posts/{username}")
+def updatePost(
+    username: str = Path(..., pattern="^[A-Za-z_]+$"),
+    updated_data: UpdatePost = Body(...)  # ✅ Marked explicitly as body input
+):
+    for i, post in enumerate(dummy_posts):
+        if post["username"] == username:
+            # Only update fields that are provided
+            if updated_data.title is not None:
+                post["title"] = updated_data.title
+            if updated_data.content is not None:
+                post["content"] = updated_data.content
+            if updated_data.rating is not None:
+                post["rating"] = updated_data.rating
+
+            dummy_posts[i] = post
+            return {
+                "message": f"Post by '{username}' was successfully updated.",
+                "data": post
+            }
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"No post found for username '{username}'"
+    )
