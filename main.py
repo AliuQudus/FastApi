@@ -1,7 +1,6 @@
-from operator import index
 from typing import Optional
 from uuid import uuid4
-from fastapi import FastAPI, Body, HTTPException, status
+from fastapi import FastAPI, Body, HTTPException, status, Path
 from pydantic import BaseModel
 
 
@@ -54,7 +53,8 @@ def createPost(post: createPost):
 
 
 @app.get("/posts/{username}")
-def getPost(username: str):
+# The path restrict the input to str
+def getPost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
     posts = [post for post in dummy_posts if post["username"] == username]
 
     if not posts:
@@ -67,8 +67,11 @@ def getPost(username: str):
 
 
 @app.delete("/posts/{username}", status_code=status.HTTP_410_GONE)
-def deletePost(username: str):
+# The path restrict the input to str
+def deletePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
     for i, post in enumerate(dummy_posts):
         if post["username"] == username:
             dummy_posts.pop(i)
             return {'message': f"Post by '{username}' has been successfully deleted"}
+    
+        
