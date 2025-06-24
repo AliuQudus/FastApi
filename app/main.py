@@ -14,21 +14,37 @@ class createPost(BaseModel):
     content: str
     rating: Optional[int] = None
 
+
 class UpdatePost(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     rating: Optional[int] = None
 
 
-dummy_posts = [{"username": "ScamHunter", "title": "Learning API", "content": "Hey guys, I am new to this and I am just started my journey as a BackEnd dev."},
-               {"username": "Diablo", "title": "Strongest Necromancer",
-                "content": "One of the best anime I have listened to on pocket fm", "rating": 8},
-               {"username": "Anonymous", "title": "Donghua", "content": "The best donghua you can watch and enjoy every bit of it is definitely Battle Through the Heavens.", "rating": 9}]
+dummy_posts = [
+    {
+        "username": "ScamHunter",
+        "title": "Learning API",
+        "content": "Hey guys, I am new to this and I am just started my journey as a BackEnd dev.",
+    },
+    {
+        "username": "Diablo",
+        "title": "Strongest Necromancer",
+        "content": "One of the best anime I have listened to on pocket fm",
+        "rating": 8,
+    },
+    {
+        "username": "Anonymous",
+        "title": "Donghua",
+        "content": "The best donghua you can watch and enjoy every bit of it is definitely Battle Through the Heavens.",
+        "rating": 9,
+    },
+]
 
 
 def findPost(username):
     for post in dummy_posts:
-        if post['username'] == username:
+        if post["username"] == username:
             return post
 
 
@@ -49,7 +65,9 @@ def createPost(post: createPost):
         if existing_post["username"] == post.username:
             # if existing_post["title"] == post.title and existing_post["content"] == post.content:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Post with this username already exists")
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Post with this username already exists",
+            )
 
     # model_dump() replaces dict() in the latest version.
     post_dict = post.model_dump()
@@ -66,7 +84,7 @@ def getPost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
     if not posts:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No posts found for username '{username}'"
+            detail=f"No posts found for username '{username}'",
         )
 
     return {"data": posts}
@@ -78,18 +96,18 @@ def deletePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
     for i, post in enumerate(dummy_posts):
         if post["username"] == username:
             dummy_posts.pop(i)
-            return {'message': f"Post by '{username}' has been successfully deleted"}
-        
+            return {"message": f"Post by '{username}' has been successfully deleted"}
+
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"No post found for username '{username}'"
-    )   
-    
+        detail=f"No post found for username '{username}'",
+    )
+
 
 @app.put("/posts/{username}")
 def updatePost(
     username: str = Path(..., pattern="^[A-Za-z_]+$"),
-    updated_data: UpdatePost = Body(...)  # ✅ Marked explicitly as body input
+    updated_data: UpdatePost = Body(...),  # ✅ Marked explicitly as body input
 ):
     for i, post in enumerate(dummy_posts):
         if post["username"] == username:
@@ -104,10 +122,10 @@ def updatePost(
             dummy_posts[i] = post
             return {
                 "message": f"Post by '{username}' was successfully updated.",
-                "data": post
+                "data": post,
             }
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"No post found for username '{username}'"
+        detail=f"No post found for username '{username}'",
     )
