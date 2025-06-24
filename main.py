@@ -73,5 +73,17 @@ def deletePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
         if post["username"] == username:
             dummy_posts.pop(i)
             return {'message': f"Post by '{username}' has been successfully deleted"}
-    
         
+        
+            
+@app.put("/posts/{username}")
+def updatePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
+    posts = [post for post in dummy_posts if post["username"] == username]
+
+    if not posts:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No posts found for username '{username}'"
+        )
+    
+    
