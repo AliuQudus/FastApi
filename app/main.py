@@ -90,7 +90,7 @@ def getPost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
     return {"data": posts}
 
 
-@app.delete("/posts/{username}", status_code=status.HTTP_410_GONE)
+@app.delete("/posts/{username}", status_code=status.HTTP_200_OK)
 # The path restrict the input to str
 def deletePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
     for i, post in enumerate(dummy_posts):
