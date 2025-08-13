@@ -208,15 +208,15 @@ VALUES(%s, %s, %s, %s) RETURNING *
 @app.get("/posts/{username}")
 # The path restrict the input to str
 def getPost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
-    posts = [post for post in dummy_posts if post["username"] == username]
+    cur.execute("SELECT * FROM posts WHERE username = %s", (username,))
+    post = cur.fetchone()
 
-    if not posts:
+    if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No posts found for username '{username}'",
         )
-
-    return {"data": posts}
+    return {"details": post}
 
 
 @app.delete("/posts/{username}", status_code=status.HTTP_200_OK)
