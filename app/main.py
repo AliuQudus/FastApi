@@ -45,6 +45,7 @@ class UpdatePost(BaseModel):
     ratings: Optional[float] = None
 
 
+"""
 dummy_posts = [
     {
         "username": "ScamHunter",
@@ -65,7 +66,7 @@ dummy_posts = [
     },
 ]
 
-"""
+
 def findPost(username):
     for post in dummy_posts:
         if post["username"] == username:
@@ -154,12 +155,6 @@ def updatePost(
         detail=f"No post found for username '{username}'",
     )
 """
-
-
-def findPost(username):
-    for post in dummy_posts:
-        if post["username"] == username:
-            return post
 
 
 @app.get("/")
