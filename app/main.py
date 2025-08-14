@@ -1,3 +1,4 @@
+from email.policy import HTTP
 from operator import index
 from typing import Optional
 from uuid import uuid4
@@ -41,7 +42,7 @@ while True:  # This is to keep the code running until it connects
 class UpdatePost(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
-    rating: Optional[float] = None
+    ratings: Optional[float] = None
 
 
 dummy_posts = [
@@ -206,8 +207,9 @@ VALUES(%s, %s, %s, %s) RETURNING *
 
 
 @app.get("/posts/{username}")
-# The path restrict the input to str
-def getPost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
+def getPost(
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$")
+):  # The path restrict the input to str
     cur.execute("SELECT * FROM posts WHERE username = %s", (username,))
     post = cur.fetchone()
 
@@ -221,40 +223,48 @@ def getPost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
 
 @app.delete("/posts/{username}", status_code=status.HTTP_200_OK)
 # The path restrict the input to str
-def deletePost(username: str = Path(..., pattern="^[A-Za-z_]+$")):
-    for i, post in enumerate(dummy_posts):
-        if post["username"] == username:
-            dummy_posts.pop(i)
-            return {"message": f"Post by '{username}' has been successfully deleted"}
+def deletePost(username: str = Path(..., pattern="^[A-Za-z_ ]+$")):
+    cur.execute("DELETE FROM posts WHERE username= %s RETURNING *", (username,))
+    post = cur.fetchone()
+    conn.commit()
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"No post found for username '{username}'",
-    )
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No post found for username '{username}'",
+        )
+    return {
+        "message": f"Post by '{username}' has been successfully deleted",
+        "data": post,
+    }
 
 
 @app.put("/posts/{username}")
 def updatePost(
-    username: str = Path(..., pattern="^[A-Za-z_]+$"),
-    updated_data: UpdatePost = Body(...),  # ✅ Marked explicitly as body input
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$"),
+    post: UpdatePost = Body(...),
 ):
-    for i, post in enumerate(dummy_posts):
-        if post["username"] == username:
-            # Only update fields that are provided
-            if updated_data.title is not None:
-                post["title"] = updated_data.title
-            if updated_data.content is not None:
-                post["content"] = updated_data.content
-            if updated_data.rating is not None:
-                post["rating"] = updated_data.rating
-
-            dummy_posts[i] = post
-            return {
-                "message": f"Post by '{username}' was successfully updated.",
-                "data": post,
-            }
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"No post found for username '{username}'",
+    # Update and check if any rows were affected
+    cur.execute(
+        "UPDATE posts SET title = %s, content = %s, ratings = %s WHERE username = %s RETURNING *",
+        (
+            post.title,
+            post.content,
+            post.ratings,
+            username,
+        ),  # Always pass in the username field if you want to upadate a specific record otherwise all the record will be updated.
     )
+
+    new_post = cur.fetchone()
+    conn.commit()
+
+    if new_post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No post found for username '{username}'",
+        )
+
+    return {
+        "message": f"Post by '{username}' was successfully updated.",
+        "data": new_post,
+    }
