@@ -3,12 +3,7 @@ from operator import index
 from typing import Optional
 from uuid import uuid4
 from fastapi import FastAPI, Body, HTTPException, status, Path
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-import psycopg2
-from psycopg2.extras import RealDictCursor
-import time
 
 
 app = FastAPI()
