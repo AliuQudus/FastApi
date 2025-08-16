@@ -11,21 +11,13 @@ from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
 import time
 from . import models
-from .database import SessionLocal, engine
+from .database import engine, get_db
 
 
 models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 class createPost(BaseModel):
@@ -66,15 +58,15 @@ async def root():
 
 @app.get("/sqlachemy")
 def sql_alchemy(db: Session = Depends(get_db)):
-    return {"Status: Successful"}
+
+    return {"Status": "Successful"}
 
 
 @app.get("/posts")
-def getPost():
-    cur.execute("""SELECT * FROM posts""")
-    posts = cur.fetchall()
-    # print(posts)
-    return {"data": posts}
+def getPost(db: Session = Depends(get_db)):
+
+    post = db.query(models.Post).all()
+    return {"data": post}
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
