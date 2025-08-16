@@ -2,16 +2,30 @@ from email.policy import HTTP
 from operator import index
 from typing import Optional
 from uuid import uuid4
-from fastapi import FastAPI, Body, HTTPException, status, Path
+from fastapi import Depends, FastAPI, Body, HTTPException, status, Path
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy.orm import Session
 import time
+from . import models
+from .database import SessionLocal, engine
+
+
+models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 class createPost(BaseModel):
@@ -48,6 +62,11 @@ class UpdatePost(BaseModel):
 @app.get("/")
 async def root():
     return {"message": "Hello guys, Welcome to my World!!!"}
+
+
+@app.get("/sqlachemy")
+def sql_alchemy(db: Session = Depends(get_db)):
+    return {"Status: Successful"}
 
 
 @app.get("/posts")
