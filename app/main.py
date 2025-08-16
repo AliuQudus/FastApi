@@ -51,11 +51,6 @@ class UpdatePost(BaseModel):
     ratings: Optional[float] = None
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello guys, Welcome to my World!!!"}
-
-
 @app.get("/sqlachemy")
 def sql_alchemy(db: Session = Depends(get_db)):
 
