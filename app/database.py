@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 # Sql_database = 'postgresql://<username>:<password>@<hostname>/<database_name>'
 
-Sql_database = "postgresql://postfres:quhduzski@localhost/Fastapi"
+Sql_database = "postgresql://postgres:quhduzski@localhost/Fastapi"
 
 engine = create_engine(Sql_database)
 
