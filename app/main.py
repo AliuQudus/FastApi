@@ -24,7 +24,8 @@ class createPost(BaseModel):
     username: str
     title: str
     content: str
-    ratings: Optional[float] = None
+    rating: Optional[float] = None
+    published: Optional[bool]
 
 
 while True:  # This is to keep the code running until it connects
@@ -95,10 +96,8 @@ VALUES(%s, %s, %s, %s) RETURNING *
     )
 
 
-@app.get("/posts/{username}")
-def getPost(
-    username: str = Path(..., pattern="^[A-Za-z_ ]+$")
-):  # The path restrict the input to str
+@app.get("/posts/{id}")
+def getPost(id: int):  # The path restrict the input to str
     cur.execute("SELECT * FROM posts WHERE username = %s", (username,))
     post = cur.fetchone()
 
