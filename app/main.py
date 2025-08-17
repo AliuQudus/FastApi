@@ -5,6 +5,7 @@ from uuid import uuid4
 from fastapi import Depends, FastAPI, Body, HTTPException, status, Path
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from httpx import post
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -79,13 +80,18 @@ def createPost(post: createPost, db: Session = Depends(get_db)):
             ),
         )
 
+    # new_post = models.Post(
+    #     username=post.username,
+    #     title=post.title,
+    #     content=post.content,
+    #     rating=post.rating,
+    #     published=post.published,
+    # )
+
     new_post = models.Post(
-        username=post.username,
-        title=post.title,
-        content=post.content,
-        rating=post.rating,
-        published=post.published,
-    )
+        **post.model_dump()
+    )  # This is same as the commented code above, it only looks cleaner than the above.
+
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -98,8 +104,10 @@ def createPost(post: createPost, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/posts/{id}")
-def getPost(id: int):  # The path restrict the input to str
+@app.get("/posts/{username}")
+def getPost(
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$")
+):  # The path restrict the input to str
     cur.execute("SELECT * FROM posts WHERE username = %s", (username,))
     post = cur.fetchone()
 
