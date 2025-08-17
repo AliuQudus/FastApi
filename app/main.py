@@ -25,7 +25,7 @@ class createPost(BaseModel):
     title: str
     content: str
     rating: Optional[float] = None
-    published: Optional[bool]
+    published: Optional[bool] = None
 
 
 while True:  # This is to keep the code running until it connects
@@ -66,32 +66,34 @@ def getPost(db: Session = Depends(get_db)):
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def createPost(post: createPost):
-    # 1️⃣ Check if post already exists
-    cur.execute("SELECT * FROM posts WHERE username = %s", (post.username,))
-    existing_user = cur.fetchone()
+def createPost(post: createPost, db: Session = Depends(get_db)):
 
+    existing_user = (
+        db.query(models.Post).filter(models.Post.username == post.username).first()
+    )
     if existing_user:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=jsonable_encoder(
-                {"message": "User already exists", "username": existing_user}
+                {"message": "User already exists", "detail": post.username}
             ),
         )
-    # 2️⃣ If not, insert the new user
-    cur.execute(
-        """INSERT INTO posts (username, title, content, ratings)
-VALUES(%s, %s, %s, %s) RETURNING * 
-""",
-        (post.username, post.title, post.content, post.ratings),
+
+    new_post = models.Post(
+        username=post.username,
+        title=post.title,
+        content=post.content,
+        rating=post.rating,
+        published=post.published,
     )
-    Post = cur.fetchone()
-    conn.commit()
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
 
     return JSONResponse(
-        status_code=status.HTTP_201_CREATED,
+        status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {"message": "User created successfully", "data": Post}
+            {"message": "User created successfully", "details": new_post}
         ),
     )
 
