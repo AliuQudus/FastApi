@@ -1,4 +1,5 @@
 from email.policy import HTTP
+from multiprocessing import synchronize
 from operator import index
 from typing import Optional
 from uuid import uuid4
@@ -9,6 +10,7 @@ from httpx import post
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy import false
 from sqlalchemy.orm import Session
 import time
 from . import models
@@ -74,7 +76,7 @@ def createPost(post: createPost, db: Session = Depends(get_db)):
     )
     if existing_user:
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=status.HTTP_404_OK,
             content=jsonable_encoder(
                 {"message": "User already exists", "detail": post.username}
             ),
@@ -106,31 +108,36 @@ def createPost(post: createPost, db: Session = Depends(get_db)):
 
 @app.get("/posts/{username}")
 def getPost(
-    username: str = Path(..., pattern="^[A-Za-z_ ]+$")
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$"), db: Session = Depends(get_db)
 ):  # The path restrict the input to str
-    cur.execute("SELECT * FROM posts WHERE username = %s", (username,))
-    post = cur.fetchone()
+    getpost = db.query(models.Post).filter(models.Post.username == username).first()
 
-    if not post:
+    if not getpost:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No posts found for username '{username}'",
         )
-    return {"details": post}
+    return {"details": getpost}
 
 
 @app.delete("/posts/{username}", status_code=status.HTTP_200_OK)
 # The path restrict the input to str
-def deletePost(username: str = Path(..., pattern="^[A-Za-z_ ]+$")):
-    cur.execute("DELETE FROM posts WHERE username= %s RETURNING *", (username,))
-    post = cur.fetchone()
-    conn.commit()
+def deletePost(
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$"), db: Session = Depends(get_db)
+):
 
-    if not post:
+    post = db.query(models.Post).filter(models.Post.username == username)
+
+    if post.first() == None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No post found for username '{username}'",
         )
+
+    post.delete(synchronize_session=False)
+
+    db.commit()
+
     return {
         "message": f"Post by '{username}' has been successfully deleted",
         "data": post,
