@@ -1,19 +1,12 @@
 from email.policy import HTTP
-from multiprocessing import synchronize
-from operator import index
-from typing import Optional
-from uuid import uuid4
 from fastapi import Depends, FastAPI, Body, HTTPException, status, Path
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from httpx import post
-from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from sqlalchemy import false
 from sqlalchemy.orm import Session
 import time
-from . import models
+from . import Schemas, models
 from .database import engine, get_db
 
 
@@ -21,14 +14,6 @@ models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
-
-
-class createPost(BaseModel):
-    username: str
-    title: str
-    content: str
-    rating: Optional[float] = None
-    published: Optional[bool] = None
 
 
 while True:  # This is to keep the code running until it connects
@@ -49,12 +34,6 @@ while True:  # This is to keep the code running until it connects
         time.sleep(5)  # The time it will wait before trying to reconnect
 
 
-class UpdatePost(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    rating: Optional[float] = None
-
-
 @app.get("/sqlachemy")
 def sql_alchemy(db: Session = Depends(get_db)):
 
@@ -69,7 +48,7 @@ def getPost(db: Session = Depends(get_db)):
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def createPost(post: createPost, db: Session = Depends(get_db)):
+def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
 
     existing_user = (
         db.query(models.Post).filter(models.Post.username == post.username).first()
@@ -147,7 +126,7 @@ def deletePost(
 @app.put("/posts/{username}")
 def updatePost(
     username: str = Path(..., regex="^[A-Za-z_ ]+$"),
-    post: UpdatePost = Body(...),
+    post: Schemas.UpdatePost = Body(...),
     db: Session = Depends(get_db),
 ):
     post_query = db.query(models.Post).filter(models.Post.username == username)
