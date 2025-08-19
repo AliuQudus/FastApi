@@ -52,7 +52,7 @@ while True:  # This is to keep the code running until it connects
 class UpdatePost(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
-    ratings: Optional[float] = None
+    rating: Optional[float] = None
 
 
 @app.get("/sqlachemy")
@@ -146,30 +146,25 @@ def deletePost(
 
 @app.put("/posts/{username}")
 def updatePost(
-    username: str = Path(..., pattern="^[A-Za-z_ ]+$"),
+    username: str = Path(..., regex="^[A-Za-z_ ]+$"),
     post: UpdatePost = Body(...),
+    db: Session = Depends(get_db),
 ):
-    # Update and check if any rows were affected
-    cur.execute(
-        "UPDATE posts SET title = %s, content = %s, ratings = %s WHERE username = %s RETURNING *",
-        (
-            post.title,
-            post.content,
-            post.ratings,
-            username,
-        ),  # Always pass in the username field if you want to upadate a specific record otherwise all the record will be updated.
-    )
+    post_query = db.query(models.Post).filter(models.Post.username == username)
+    db_post = post_query.first()
 
-    new_post = cur.fetchone()
-    conn.commit()
-
-    if new_post is None:
+    if db_post is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No post found for username '{username}'",
         )
 
+    post_query.update(post.model_dump(), synchronize_session=False)
+
+    db.commit()
+    db.refresh(db_post)
+
     return {
         "message": f"Post by '{username}' was successfully updated.",
-        "data": new_post,
+        "data": db_post,
     }
