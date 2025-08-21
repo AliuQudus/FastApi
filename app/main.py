@@ -48,7 +48,7 @@ def getPost(db: Session = Depends(get_db)):
 
 
 @app.post(
-    "/posts", status_code=status.HTTP_201_CREATED, response_model=Schemas.Response
+    "/posts", response_model=Schemas.Response, status_code=status.HTTP_201_CREATED
 )
 def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
 
@@ -79,12 +79,7 @@ def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_post)
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=jsonable_encoder(
-            {"message": "User created successfully", **jsonable_encoder(new_post)}
-        ),
-    )
+    return new_post
 
 
 @app.get("/posts/{username}", response_model=Schemas.Response)

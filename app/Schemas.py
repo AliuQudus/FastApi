@@ -22,3 +22,6 @@ class Response(BaseModel):
     content: str
     rating: float
     published: bool
+
+    # class Config:
+    #     from_attributes = True
