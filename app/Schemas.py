@@ -1,3 +1,4 @@
+from pyclbr import Class
 from pydantic import BaseModel
 from typing import Optional
 
@@ -14,3 +15,10 @@ class UpdatePost(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     rating: Optional[float] = None
+
+
+class Response(BaseModel):
+    title: str
+    content: str
+    rating: float
+    published: bool
