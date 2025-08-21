@@ -44,10 +44,12 @@ def sql_alchemy(db: Session = Depends(get_db)):
 def getPost(db: Session = Depends(get_db)):
 
     post = db.query(models.Post).all()
-    return {"data": post}
+    return post
 
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/posts", status_code=status.HTTP_201_CREATED, response_model=Schemas.Response
+)
 def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
 
     existing_user = (
@@ -55,7 +57,7 @@ def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
     )
     if existing_user:
         return JSONResponse(
-            status_code=status.HTTP_404_OK,
+            status_code=status.HTTP_200_OK,
             content=jsonable_encoder(
                 {"message": "User already exists", "detail": post.username}
             ),
@@ -80,7 +82,7 @@ def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {"message": "User created successfully", "details": new_post}
+            {"message": "User created successfully", **jsonable_encoder(new_post)}
         ),
     )
 
@@ -96,7 +98,7 @@ def getPost(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No posts found for username '{username}'",
         )
-    return {"details": getpost}
+    return getpost
 
 
 @app.delete("/posts/{username}", status_code=status.HTTP_200_OK)
@@ -119,11 +121,11 @@ def deletePost(
 
     return {
         "message": f"Post by '{username}' has been successfully deleted",
-        "data": post,
+        **jsonable_encoder(post),
     }
 
 
-@app.put("/posts/{username}")
+@app.put("/posts/{username}", response_model=Schemas.Response)
 def updatePost(
     username: str = Path(..., regex="^[A-Za-z_ ]+$"),
     post: Schemas.UpdatePost = Body(...),
@@ -145,5 +147,5 @@ def updatePost(
 
     return {
         "message": f"Post by '{username}' was successfully updated.",
-        "data": db_post,
+        **db_post.__dict__,
     }
