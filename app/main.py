@@ -87,7 +87,7 @@ def createPost(post: Schemas.createPost, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/posts/{username}")
+@app.get("/posts/{username}", response_model=Schemas.Response)
 def getPost(
     username: str = Path(..., pattern="^[A-Za-z_ ]+$"), db: Session = Depends(get_db)
 ):  # The path restrict the input to str
