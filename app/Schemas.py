@@ -20,8 +20,7 @@ class UpdatePost(BaseModel):
 class Response(BaseModel):
     title: str
     content: str
-    rating: float
-    published: bool
+    rating: Optional[float] = None
+    published: Optional[bool] = None
 
-    # class Config:
-    #     from_attributes = True
+    model_config = {"from_attributes": True}  # allows SQLAlchemy objects

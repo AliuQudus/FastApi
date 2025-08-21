@@ -40,7 +40,11 @@ def sql_alchemy(db: Session = Depends(get_db)):
     return {"Status": "Successful"}
 
 
-@app.get("/posts")
+@app.get(
+    "/posts",
+    response_model=list[Schemas.Response],
+    response_model_exclude_none=True,  # This excludes any null value in the response
+)
 def getPost(db: Session = Depends(get_db)):
 
     post = db.query(models.Post).all()
