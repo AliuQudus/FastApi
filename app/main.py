@@ -1,3 +1,4 @@
+from ast import And, Or
 from email.policy import HTTP
 from fastapi import Depends, FastAPI, Body, HTTPException, status, Path
 from fastapi.responses import JSONResponse
@@ -148,3 +149,54 @@ def updatePost(
         "message": f"Post by '{username}' was successfully updated.",
         **db_post.__dict__,
     }
+
+
+@app.get(
+    "/users",
+    status_code=status.HTTP_201_CREATED,
+    response_model=list[Schemas.UserResponse],
+)
+def getPost(db: Session = Depends(get_db)):
+
+    post = db.query(models.Login).all()
+    return post
+
+
+@app.post(
+    "/users", status_code=status.HTTP_201_CREATED, response_model=Schemas.UserResponse
+)
+def createAccount(post: Schemas.Login, db: Session = Depends(get_db)):
+
+    existing_user = (
+        db.query(models.Login).filter(models.Login.email == post.email).first()
+    )
+    if existing_user:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(
+                {"message": "Account already exists", "detail": post.email}
+            ),
+        )
+
+    Or
+
+    existing_user = (
+        db.query(models.Login).filter(models.Login.username == post.username).first()
+    )
+    if existing_user:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(
+                {"message": "User already exists", "detail": post.username}
+            ),
+        )
+
+    new_user = models.Login(
+        **post.model_dump()
+    )  # This is same as the commented code above, it only looks cleaner than the above.
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
