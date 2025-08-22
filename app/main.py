@@ -6,9 +6,13 @@ from fastapi.encoders import jsonable_encoder
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
+from passlib.context import CryptContext
 import time
 from . import Schemas, models
 from .database import engine, get_db
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -191,9 +195,7 @@ def createAccount(post: Schemas.Login, db: Session = Depends(get_db)):
             ),
         )
 
-    new_user = models.Login(
-        **post.model_dump()
-    )  # This is same as the commented code above, it only looks cleaner than the above.
+    new_user = models.Login(**post.model_dump())
 
     db.add(new_user)
     db.commit()
