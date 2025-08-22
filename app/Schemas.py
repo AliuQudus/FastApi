@@ -1,5 +1,5 @@
 from pyclbr import Class
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 
@@ -28,12 +28,12 @@ class Response(BaseModel):
 
 class Login(BaseModel):
     username: str
-    email: str
+    email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
     username: str
-    email: str
+    email: EmailStr
 
     model_config = {"from_attributes": True}
