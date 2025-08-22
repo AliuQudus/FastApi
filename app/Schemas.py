@@ -24,3 +24,16 @@ class Response(BaseModel):
     published: Optional[bool] = None
 
     model_config = {"from_attributes": True}  # allows SQLAlchemy objects
+
+
+class Login(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    username: str
+    email: str
+
+    model_config = {"from_attributes": True}
