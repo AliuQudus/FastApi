@@ -1,6 +1,6 @@
 from ast import Or
 from fastapi import Depends, APIRouter, Body, HTTPException, status, Path
-from .. import Schemas, models, main
+from .. import Schemas, models, main, utils
 from ..database import get_db
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
@@ -25,7 +25,7 @@ def users(db: Session = Depends(get_db)):
 )
 def createUser(user: Schemas.Login, db: Session = Depends(get_db)):
 
-    hashed_password = main.pwd_context.hash(user.password)
+    hashed_password = utils.pwd_context.hash(user.password)
 
     user.password = hashed_password
 
