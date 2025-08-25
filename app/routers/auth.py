@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter, Body, HTTPException, status, Path
 from sqlalchemy.orm import Session
 
-from app import Schemas, models, utils
+from app import Schemas, models, utils, Oauth
 from ..database import get_db
 
 
@@ -25,4 +25,5 @@ def login(user_details: Schemas.UserLogin, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid Credentials"
         )
 
-    return {"user": "Successful"}
+    access_token = Oauth.AccessToken(data={"username": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
