@@ -1,6 +1,6 @@
 from pydoc import text
-from tkinter import Text
-from sqlalchemy import TIMESTAMP, Column, Integer, text, String, Boolean
+from sqlalchemy import TIMESTAMP, Column, Integer, text, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from .database import Base
 
 
@@ -8,7 +8,7 @@ class Post(Base):
     __tablename__ = "post"
 
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
-    username = Column(String, nullable=False, unique=True)
+    username = Column(String, ForeignKey("users.username"), nullable=False)
     title = Column(String, nullable=False)
     content = Column(String, nullable=False)
     rating = Column(String, nullable=True)
@@ -16,6 +16,8 @@ class Post(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
+
+    owner = relationship("Login", back_populates="posts")
 
 
 class Login(Base):
@@ -28,3 +30,5 @@ class Login(Base):
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
+
+    posts = relationship("Post", back_populates="owner")
