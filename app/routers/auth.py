@@ -17,12 +17,12 @@ def login(user_details: Schemas.UserLogin, db: Session = Depends(get_db)):
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid Credentials"
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials"
         )
 
     if not utils.verify(user_details.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid Credentials"
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials"
         )
 
     access_token = Oauth.AccessToken(data={"username": user.username})
