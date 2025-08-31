@@ -1,5 +1,3 @@
-from email.policy import HTTP
-from operator import index
 from typing import Optional
 from uuid import uuid4
 from fastapi import FastAPI, Body, HTTPException, status, Path
