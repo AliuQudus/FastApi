@@ -68,21 +68,19 @@ class UpdatePost(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     rating: Optional[float] = None
-    published: Optional[bool] = (
-        None  # Added this in case user wants to update publish status
-    )
+    published: Optional[bool] = None
 
 
 class Response(BaseModel):
-    id: int  # Added ID field for unique identification
-    username: str  # Added username to show who created the post
+    id: int
+    username: str
     title: str
     content: str
     rating: Optional[float] = None
     published: Optional[bool] = None
-    created_at: datetime  # Added timestamp
+    created_at: datetime
 
-    model_config = {"from_attributes": True}  # allows SQLAlchemy objects
+    model_config = {"from_attributes": True}
 
 
 class Login(BaseModel):
@@ -92,10 +90,10 @@ class Login(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: int  # Added ID field
+    id: int
     username: str
     email: EmailStr
-    created_at: datetime  # Added timestamp
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 
