@@ -189,11 +189,6 @@ def getMyPosts(
     db: Session = Depends(get_db),
     current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser),
 ):
-    if not current_user.username:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication data",
-        )
 
     posts = (
         db.query(models.Post)
@@ -209,7 +204,6 @@ def getMyPosts(
     return posts
 
 
-# Updated to work with specific post ID and add authorization
 @router.delete("/{post_id}", status_code=status.HTTP_200_OK)
 def deletePost(
     post_id: int = Path(...),
@@ -222,19 +216,26 @@ def deletePost(
             detail="Invalid authentication data",
         )
 
-    # Find the post and ensure it belongs to the current user
-    post = db.query(models.Post).filter(
-        models.Post.id == post_id, models.Post.username == current_user.username
-    )
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
-    post_to_delete = post.first()
-    if post_to_delete is None:
+    if post is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No post found with ID '{post_id}' or you don't have permission to delete it",
+            detail=f"Post with ID '{post_id}' not found",
         )
 
-    post.delete(synchronize_session=False)
+    # Then check if the current user owns this post
+    if post.username != current_user.username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You don't have permission to delete this post'",
+        )
+
+    # If we get here, the post exists and belongs to the user
+    db.query(models.Post).filter(
+        models.Post.id == post_id, models.Post.username == current_user.username
+    ).delete(synchronize_session=False)
+
     db.commit()
 
     return {"message": f"Post with ID '{post_id}' has been successfully deleted"}
@@ -254,21 +255,32 @@ def updatePost(
             detail="Invalid authentication data",
         )
 
-    # Find the post and ensure it belongs to the current user
+    # First, check if the post exists at all
+    posts = db.query(models.Post).filter(models.Post.id == post_id).first()
+
+    if posts is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with ID '{post_id}' not found",
+        )
+
+    # Then check if the current user owns this post
+    if posts.username != current_user.username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You don't have permission to update this post'",
+        )
+
+    # If we get here, the post exists and belongs to the user
     post_query = db.query(models.Post).filter(
         models.Post.id == post_id, models.Post.username == current_user.username
     )
-    db_post = post_query.first()
-
-    if db_post is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No post found with ID '{post_id}' or you don't have permission to update it",
-        )
 
     # Use exclude_unset=True to only update provided fields
     post_query.update(post.model_dump(exclude_unset=True), synchronize_session=False)
     db.commit()
-    db.refresh(db_post)
 
-    return db_post
+    # Get the updated post for the response
+    updated_post = post_query.first()
+
+    return updated_post
