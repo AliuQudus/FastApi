@@ -102,7 +102,7 @@ def deleteUser(
 """
 
 from fastapi import Depends, APIRouter, Body, HTTPException, status, Path
-from .. import Schemas, models, main, utils
+from .. import Schemas, models, main, utils, Oauth
 from ..database import get_db
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
@@ -175,7 +175,9 @@ def getUser(
 
 @router.delete("/{username}", status_code=status.HTTP_200_OK)
 def deleteUser(
-    username: str = Path(..., pattern="^[A-Za-z_ ]+$"), db: Session = Depends(get_db)
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$"),
+    db: Session = Depends(get_db),
+    current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser),
 ):
     user_query = db.query(models.Login).filter(models.Login.username == username)
     user = user_query.first()
