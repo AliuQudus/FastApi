@@ -71,6 +71,15 @@ class UpdatePost(BaseModel):
     published: Optional[bool] = None
 
 
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class Response(BaseModel):
     id: int
     username: str
@@ -79,6 +88,7 @@ class Response(BaseModel):
     rating: Optional[float] = None
     published: Optional[bool] = None
     created_at: datetime
+    owner: UserResponse
 
     model_config = {"from_attributes": True}
 
@@ -87,15 +97,6 @@ class Login(BaseModel):
     username: str
     email: EmailStr
     password: str
-
-
-class UserResponse(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
 
 
 class UserLogin(BaseModel):
