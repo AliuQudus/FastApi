@@ -9,6 +9,11 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     username = Column(String, ForeignKey("users.username"), nullable=False)
+    """
+    username = Column(
+        String, ForeignKey("users.username", ondelete="CASCADE"), nullable=False
+    )
+    """
     title = Column(String, nullable=False)
     content = Column(String, nullable=False)
     rating = Column(String, nullable=True)
