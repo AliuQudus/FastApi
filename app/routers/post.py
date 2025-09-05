@@ -110,6 +110,7 @@ def updatePost(
     }
 """
 
+from typing import Optional
 from fastapi import APIRouter, Depends, FastAPI, Body, HTTPException, status, Path
 from .. import Schemas, models, Oauth
 from ..database import get_db
@@ -125,8 +126,22 @@ router = APIRouter(prefix="/posts", tags=["Post"])
     response_model=list[Schemas.Response],
     response_model_exclude_none=True,  # This excludes any null value in the response
 )
-def getPost(db: Session = Depends(get_db)):
-    post = db.query(models.Post).all()
+def getPost(
+    db: Session = Depends(get_db),
+    limit: int = 10,
+    skip: int = 0,
+    search: Optional[str] = " ",
+):
+
+    post = (
+        db.query(models.Post)
+        .filter(
+            models.Post.title.contains(search),
+        )
+        .limit(limit)
+        .offset(skip)
+        .all()
+    )
     return post
 
 
