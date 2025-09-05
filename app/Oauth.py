@@ -3,14 +3,15 @@ from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from app import Schemas
 from fastapi.security import OAuth2PasswordBearer
+from .config import Settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-Secret_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+Secret_key = Settings.SECRET_KEY
 
-Algorithm = "HS256"
+Algorithm = Settings.ALGORITHM
 
-Token_Expiration = 60
+Token_Expiration = Settings.TOKEN_EXPIRATION
 
 
 def AccessToken(data: dict):
