@@ -101,12 +101,11 @@ def deleteUser(
     }
 """
 
-from fastapi import Depends, APIRouter, Body, HTTPException, status, Path
-from .. import Schemas, models, main, utils, Oauth
+from fastapi import Depends, APIRouter, HTTPException, status, Path
+from .. import Schemas, models, utils, Oauth
 from ..database import get_db
 from sqlalchemy.orm import Session
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+
 
 router = APIRouter(prefix="/users", tags=["User"])
 
