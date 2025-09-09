@@ -27,3 +27,10 @@ def login(user_details: Schemas.UserLogin, db: Session = Depends(get_db)):
 
     access_token = Oauth.AccessToken(data={"username": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout")
+def logout(current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser)):
+    return {
+        "message": f"User {current_user.username} successfully logged out. Please remove the token from client storage."
+    }
