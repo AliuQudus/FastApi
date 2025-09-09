@@ -187,6 +187,11 @@ def deleteUser(
             detail=f"No account found for username '{username}'",
         )
 
+    if current_user.username != username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete your own account",
+        )
     # Delete all posts by this user first (due to foreign key constraint)
     db.query(models.Post).filter(models.Post.username == username).delete(
         synchronize_session=False
