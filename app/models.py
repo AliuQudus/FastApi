@@ -1,4 +1,5 @@
 from pydoc import text
+from tkinter import CASCADE
 from sqlalchemy import TIMESTAMP, Column, Integer, text, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -37,3 +38,20 @@ class Login(Base):
     )
 
     posts = relationship("Post", back_populates="owner")
+
+
+class Like(Base):
+    __tablename__ = "likes"
+
+    post_id = Column(
+        Integer,
+        ForeignKey("post.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    user_username = Column(
+        String,
+        ForeignKey("users.username", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
