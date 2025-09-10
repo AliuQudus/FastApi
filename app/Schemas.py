@@ -52,7 +52,7 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 """
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
 
@@ -111,3 +111,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+
+class Likes(BaseModel):
+    post_id: int
+    dir: int = Field(..., ge=0, le=1)
