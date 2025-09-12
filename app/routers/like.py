@@ -6,8 +6,14 @@ from sqlalchemy.orm import Session
 router = APIRouter(prefix="/like", tags=["Likes"])
 
 
+@router.get("", status_code=status.HTTP_200_OK)
+def likes(db: Session = Depends(database.get_db)):
+    user = db.query(models.Like).all()
+    return user
+
+
 @router.post("", status_code=status.HTTP_200_OK)
-def likes(
+def likePost(
     vote: Schemas.Likes,
     db: Session = Depends(database.get_db),
     current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser),
@@ -53,3 +59,50 @@ def likes(
         db.commit()
 
         return {"message": "You successfully unliked this post"}
+
+
+# Add endpoint to get current user's likes
+@router.get("/my/likes")
+def getMylikess(
+    db: Session = Depends(database.get_db),
+    current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser),
+):
+
+    posts = (
+        db.query(models.Like)
+        .filter(models.Like.user_username == current_user.username)
+        .all()
+    )
+
+    if not posts:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No likes found for current user",
+        )
+
+    return posts
+
+
+@router.get("/{username}")
+def getlikesByUsername(
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$"),
+    db: Session = Depends(database.get_db),
+):
+
+    post = db.query(models.Login).filter(models.Login.username == username).first()
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User '{username}' does not exist",
+        )
+
+    likes = db.query(models.Like).filter(models.Like.user_username == username).all()
+
+    if not likes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No post liked by user '{username}'",
+        )
+
+    return likes
