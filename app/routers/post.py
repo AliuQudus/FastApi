@@ -112,6 +112,7 @@ def updatePost(
 
 from typing import Optional
 from fastapi import APIRouter, Depends, FastAPI, Body, HTTPException, status, Path
+from sqlalchemy import func
 from .. import Schemas, models, Oauth
 from ..database import get_db
 from sqlalchemy.orm import Session
@@ -123,7 +124,7 @@ router = APIRouter(prefix="/posts", tags=["Post"])
 
 @router.get(
     "",
-    response_model=list[Schemas.Response],
+    response_model=list[Schemas.PostOut],
     response_model_exclude_none=True,  # This excludes any null value in the response
 )
 def getPost(
@@ -142,7 +143,15 @@ def getPost(
         .offset(skip)
         .all()
     )
-    return post
+
+    result = (
+        db.query(models.Post, func.count(models.Like.post_id).label("likes"))
+        .join(models.Like, models.Like.post_id == models.Post.id, isouter=True)
+        .group_by(models.Post.id)
+        .all()
+    )
+
+    return result
 
 
 @router.post("", response_model=Schemas.Response, status_code=status.HTTP_201_CREATED)
