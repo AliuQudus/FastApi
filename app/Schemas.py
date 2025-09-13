@@ -39,6 +39,14 @@ class Response(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PostOut(BaseModel):
+    Post: Response
+    likes: int
+
+
+model_config = {"from_attributes": True}
+
+
 class Login(BaseModel):
     username: str
     email: EmailStr
