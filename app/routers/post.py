@@ -134,20 +134,25 @@ def getPost(
     search: Optional[str] = " ",
 ):
 
-    post = (
-        db.query(models.Post)
-        .filter(
-            models.Post.title.contains(search),
-        )
-        .limit(limit)
-        .offset(skip)
-        .all()
-    )
+    # post = (
+    #     db.query(models.Post)
+    #     .filter(
+    #         models.Post.title.contains(search),
+    #     )
+    #     .limit(limit)
+    #     .offset(skip)
+    #     .all()
+    # )
 
     result = (
         db.query(models.Post, func.count(models.Like.post_id).label("likes"))
         .join(models.Like, models.Like.post_id == models.Post.id, isouter=True)
         .group_by(models.Post.id)
+        .filter(
+            models.Post.title.contains(search),
+        )
+        .limit(limit)
+        .offset(skip)
         .all()
     )
 
@@ -193,11 +198,21 @@ def createPost(
 
 
 # Changed to return all posts for a username (since multiple posts are allowed)
-@router.get("/{username}", response_model=list[Schemas.Response])
+@router.get("/{username}", response_model=list[Schemas.PostOut])
 def getPostsByUsername(
-    username: str = Path(..., pattern="^[A-Za-z_ ]+$"), db: Session = Depends(get_db)
+    username: str = Path(..., pattern="^[A-Za-z_ ]+$"),
+    db: Session = Depends(get_db),
+    current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser),
 ):
-    posts = db.query(models.Post).filter(models.Post.username == username).all()
+    # posts = db.query(models.Post).filter(models.Post.username == username).all()
+
+    posts = (
+        db.query(models.Post, func.count(models.Like.post_id).label("likes"))
+        .join(models.Like, models.Like.post_id == models.Post.id, isouter=True)
+        .group_by(models.Post.id)
+        .filter(models.Post.username == username)
+        .all()
+    )
 
     if not posts:
         raise HTTPException(
@@ -208,14 +223,22 @@ def getPostsByUsername(
 
 
 # Add endpoint to get current user's posts
-@router.get("/my/posts", response_model=list[Schemas.Response])
+@router.get("/my/posts", response_model=list[Schemas.PostOut])
 def getMyPosts(
     db: Session = Depends(get_db),
     current_user: Schemas.TokenData = Depends(Oauth.getCurrentUser),
 ):
 
+    # posts = (
+    #     db.query(models.Post)
+    #     .filter(models.Post.username == current_user.username)
+    #     .all()
+    # )
+
     posts = (
-        db.query(models.Post)
+        db.query(models.Post, func.count(models.Like.post_id).label("likes"))
+        .join(models.Like, models.Like.post_id == models.Post.id, isouter=True)
+        .group_by(models.Post.id)
         .filter(models.Post.username == current_user.username)
         .all()
     )
