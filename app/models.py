@@ -1,5 +1,6 @@
 from pydoc import text
-from tkinter import CASCADE
+
+# from tkinter import CASCADE
 from sqlalchemy import TIMESTAMP, Column, Integer, text, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
